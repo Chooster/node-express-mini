@@ -14,6 +14,38 @@ const readWords = () => {
   return contents.split('\n');
 };
 
+const wordList = readWords();
+const finalWord = wordList[Math.floor(Math.random() * wordList.length)];
+
+const guesses = {};
+
+server.post('/guess', (req, res) => {
+  const guess = req.body.guess;
+  if ((!guess) || (guess.length !== 1)) {
+    res.status(STATUS_USER_ERROR);
+    res.json({ error: 'Must provide a guess of a single letter.' });
+    return;
+  }
+  if (guesses[guess]) {
+    res.status(STATUS_USER_ERROR);
+    res.json({ error: `\'${guess}\' has already been guessed!` });
+    return;
+  }
+  guesses[guess] = true;
+  res.json({ guess });
+});
+
+server.get('/', (req, res) => {
+  const wordSoFarArray = Array.from(finalWord).map((letter) => {
+    if (guesses[letter]) {
+      return letter;
+    }
+    return '-';
+  });
+  const wordSoFar = wordSoFarArray.join('');
+  res.json({ wordSoFar, guesses });
+});
+
 // TODO: your code to handle requests
 
 server.listen(3000);
